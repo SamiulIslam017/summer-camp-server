@@ -52,6 +52,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     const usersCollection = client.db("summerCamp").collection("users");
+    const coursesCollection = client.db("summerCamp").collection("courses");
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -73,6 +74,17 @@ async function run() {
       }
       next();
     };
+    // const verifyInstructor = async (req, res, next) => {
+    //   const email = req.decoded.email;
+    //   const query = { email: email };
+    //   const user = await usersCollection.findOne(query);
+    //   if (user?.role !== "instructor") {
+    //     return res
+    //       .status(403)
+    //       .send({ error: true, message: "Forbidden Access" });
+    //   }
+    //   next();
+    // };
 
     // user collection
     app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
@@ -134,6 +146,14 @@ async function run() {
         },
       };
       const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    // Courses collection related
+
+    app.post("/courses", async (req, res) => {
+      const course = req.body;
+      const result = await coursesCollection.insertOne(course);
       res.send(result);
     });
     // Send a ping to confirm a successful connection
