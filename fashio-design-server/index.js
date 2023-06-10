@@ -157,10 +157,44 @@ async function run() {
     });
 
     // Courses collection related
-
+    app.get("/courses/admin", verifyJWT, async (req, res) => {
+      const result = await coursesCollection.find().toArray();
+      res.send(result);
+    });
     app.post("/courses", async (req, res) => {
       const course = req.body;
       const result = await coursesCollection.insertOne(course);
+      res.send(result);
+    });
+    app.get("/courses/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await coursesCollection.findOne(query);
+      res.send(result);
+    });
+    app.put("/courses/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+
+      const updatedCourse = req.body;
+
+      const coffee = {
+        $set: {
+          course_name: updatedCourse.course_name,
+          total_seats: updatedCourse.total_seats,
+          price: updatedCourse.parseFloat(price),
+          image: updatedCourse.image,
+          instructor_name: updatedCourse.displayName,
+          email: updatedCourse.email,
+
+          status: updatedCourse.status,
+          total_students: updatedCourse.total_students,
+          feedback: updatedCourse.feedback,
+        },
+      };
+      const options = { upsert: true };
+
+      const result = await coursesCollection.updateOne(filter, coffee, options);
       res.send(result);
     });
 
@@ -183,6 +217,18 @@ async function run() {
       res.send(result);
     });
 
+    // update course status
+    app.patch("/courses/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: "approved",
+        },
+      };
+      const result = await coursesCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log(
