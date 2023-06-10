@@ -157,8 +157,11 @@ async function run() {
     });
 
     // Courses collection related
-    app.get("/courses/admin", verifyJWT, async (req, res) => {
-      const result = await coursesCollection.find().toArray();
+    app.get("/courses/admin", verifyJWT, verifyAdmin, async (req, res) => {
+      const result = await coursesCollection
+        .find()
+        .sort({ date: -1 })
+        .toArray();
       res.send(result);
     });
     app.post("/courses", async (req, res) => {
@@ -172,29 +175,20 @@ async function run() {
       const result = await coursesCollection.findOne(query);
       res.send(result);
     });
-    app.put("/courses/:email", verifyJWT, async (req, res) => {
-      const email = req.params.email;
-      const filter = { email: email };
-
+    app.patch("/courses/update/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
       const updatedCourse = req.body;
-
-      const coffee = {
+      const updateDoc = {
         $set: {
           course_name: updatedCourse.course_name,
           total_seats: updatedCourse.total_seats,
-          price: updatedCourse.parseFloat(price),
+          price: updatedCourse.price,
           image: updatedCourse.image,
-          instructor_name: updatedCourse.displayName,
-          email: updatedCourse.email,
-
-          status: updatedCourse.status,
-          total_students: updatedCourse.total_students,
-          feedback: updatedCourse.feedback,
         },
       };
-      const options = { upsert: true };
 
-      const result = await coursesCollection.updateOne(filter, coffee, options);
+      const result = await coursesCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
@@ -213,17 +207,34 @@ async function run() {
       }
 
       const query = { email: email };
-      const result = await coursesCollection.find(query).toArray();
+      const result = await coursesCollection
+        .find(query)
+        .sort({ date: -1 })
+        .toArray();
       res.send(result);
     });
 
-    // update course status
+    // update course status approved
     app.patch("/courses/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
           status: "approved",
+        },
+      };
+      const result = await coursesCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    // update course status denied
+    app.patch("/courses/feedback/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateFeedback = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: updateFeedback.status,
+          feedback: updateFeedback.feedback,
         },
       };
       const result = await coursesCollection.updateOne(filter, updateDoc);
