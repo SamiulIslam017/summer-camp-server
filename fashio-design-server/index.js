@@ -77,8 +77,14 @@ async function run() {
       next();
     };
 
-    // user collection
+    // user collection for admin only
     app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+
+    //users collection get for website
+    app.get("/instructors", async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -95,6 +101,12 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      res.send(user);
+    });
     // check admin
     app.get("/users/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
@@ -161,7 +173,7 @@ async function run() {
         .toArray();
       res.send(result);
     });
-    // for all user api
+    //
     app.post("/courses", async (req, res) => {
       const course = req.body;
       const result = await coursesCollection.insertOne(course);
@@ -240,6 +252,15 @@ async function run() {
         },
       };
       const result = await coursesCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    // get all courses for everyone
+    app.get("/open", async (req, res) => {
+      const result = await coursesCollection
+        .find({ status: "approved" })
+        .sort({ date: -1 })
+        .toArray();
       res.send(result);
     });
     // Send a ping to confirm a successful connection
