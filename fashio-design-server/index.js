@@ -101,7 +101,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/users/:email", async (req, res) => {
+    app.get("/users/hidden/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const user = await usersCollection.findOne(query);
@@ -259,7 +259,7 @@ async function run() {
     app.get("/open", async (req, res) => {
       const result = await coursesCollection
         .find({ status: "approved" })
-        .sort({ date: -1 })
+        .sort({ total_students: -1 })
         .toArray();
       res.send(result);
     });
