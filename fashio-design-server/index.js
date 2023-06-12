@@ -53,6 +53,7 @@ async function run() {
     // await client.connect();
     const usersCollection = client.db("summerCamp").collection("users");
     const coursesCollection = client.db("summerCamp").collection("courses");
+    const bookingCollection = client.db("summerCamp").collection("booking");
 
     // jwt api
     app.post("/jwt", (req, res) => {
@@ -261,6 +262,29 @@ async function run() {
         .find({ status: "approved" })
         .sort({ total_students: -1 })
         .toArray();
+      res.send(result);
+    });
+
+    // booking collection related api
+
+    app.post("/booking", async (req, res) => {
+      const course = req.body;
+      const result = await bookingCollection.insertOne(course);
+      res.send(result);
+    });
+    app.get("/booking", async (req, res) => {
+      const email = req.query.email;
+      if (!email) {
+        res.send([]);
+      }
+      const query = { user_email: email };
+      const result = await bookingCollection.find(query).toArray();
+      res.send(result);
+    });
+    app.delete("/booking/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await bookingCollection.deleteOne(query);
       res.send(result);
     });
     // Send a ping to confirm a successful connection
